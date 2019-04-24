@@ -60,7 +60,7 @@ btn_predict.place(x=255, y=200)
 label3 = ttk.Label(root,text='Results')
 label3.place(x=20, y=230)
 
-lb_results = Listbox(root,width=92)
+lb_results = tkinter.Listbox(root,width=92)
 lb_results.place(x=20,y=250)
 
 
