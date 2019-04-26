@@ -37,20 +37,33 @@ def setUnClassifiedLocation():
     tf_unclassfied.insert(0,path)
 
 def runPredict():
+    CATEGORIES = ["daisy", "dandelion", "rose", "sunflower", "tulip"]
+    m = {"daisy": 0, "dandelion":0, "rose":0, "sunflower":0, "tulip":0}
+
     model = flower_classification.model
-    model.load_weights('C:\\Users\\user\\PycharmProjects\\GuiFlower\\flowers_model.h5')
+    model.load_weights('C:\\Users\\USER\\PycharmProjects\\FlowerClassification\\flowers_model2.h5')
     #mypath = tf_unclassfied.get()
-    mypath = "C:\\Users\\user\\Downloads\\rose"
+    mypath = "C:\\Users\\USER\Desktop\\flower_project\\flowers\\tulip"
 
     onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 
     for file in onlyfiles:
-        img = cv2.imread(mypath + "\\" + file,mode='RGB')
-        img = cv2.resize(img,(128,128))
-        x = np.expand_dims(img, axis=0)
-        img = np.vstack([x])
-        predict = model.predict(img)
-        print(predict)
+        try:
+            img = cv2.imread(mypath + "\\" + file)
+            img = cv2.resize(img,(128,128))
+            x = np.expand_dims(img, axis=0)
+            img = np.vstack([x])
+            predict = model.predict(img)
+            x = m[CATEGORIES[np.argmax(predict[0])]]
+            x = x+1
+            m[CATEGORIES[np.argmax(predict[0])]] = x
+            print(file)
+            print(CATEGORIES[np.argmax(predict[0])])
+        except:
+            print("Error in ")
+            print(file)
+
+    print(m)
 
 
 
