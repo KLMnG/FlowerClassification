@@ -4,7 +4,6 @@ import tkinter
 
 import numpy as np
 
-import flower_classification
 import cv2
 
 from tkinter import ttk
@@ -13,6 +12,10 @@ from tkinter.filedialog import askopenfilename
 from os import listdir
 from os.path import isfile, join
 
+from keras.models import load_model
+
+categories = ["daisy", "dandelion", "rose", "sunflower", "tulip"]
+dictionary_flowers = {"daisy": 0, "dandelion": 0, "rose": 0, "sunflower": 0, "tulip": 0}
 
 
 def openDirectory():
@@ -31,22 +34,29 @@ def setModelLocation():
     tf_model.delete(0,'end')
     tf_model.insert(0,name)
 
+
+def load_train_model(path):
+    model = load_model(path)
+    optimizer = 'Adam'
+    loss = 'categorical_crossentropy'
+    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'])
+    return model
+
+
 def setUnClassifiedLocation():
     path = openDirectory()
     tf_unclassfied.delete(0,'end')
     tf_unclassfied.insert(0,path)
 
-def runPredict():
-    CATEGORIES = ["daisy", "dandelion", "rose", "sunflower", "tulip"]
-    m = {"daisy": 0, "dandelion":0, "rose":0, "sunflower":0, "tulip":0}
+def print_conclusion():
+    lb_results.insert(0, dictionary_flowers)
 
-    model = flower_classification.model
-    model.load_weights('C:\\Users\\USER\\PycharmProjects\\FlowerClassification\\flowers_model2.h5')
-    #mypath = tf_unclassfied.get()
-    mypath = "C:\\Users\\USER\Desktop\\flower_project\\flowers\\tulip"
+def runPredict():
+    model = load_train_model(tf_model.get())
+    mypath = tf_unclassfied.get()
 
     onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-
+    lb_results.delete(0, 'end')
     for file in onlyfiles:
         try:
             img = cv2.imread(mypath + "\\" + file)
@@ -54,17 +64,20 @@ def runPredict():
             x = np.expand_dims(img, axis=0)
             img = np.vstack([x])
             predict = model.predict(img)
-            x = m[CATEGORIES[np.argmax(predict[0])]]
-            x = x+1
-            m[CATEGORIES[np.argmax(predict[0])]] = x
-            print(file)
-            print(CATEGORIES[np.argmax(predict[0])])
+            max_predict = np.argmax(predict[0])
+            count = dictionary_flowers[categories[max_predict]]
+            count = count+1
+            dictionary_flowers[categories[max_predict]] = count
+            lb_results.insert(0, file + " - " + categories[max_predict])
+            write_prediction(file,categories[max_predict])
         except:
             print("Error in ")
             print(file)
 
-    print(m)
 
+def write_prediction(file_name, prediction):
+    with open("prediction_file.csv", "a") as file:
+        file.write(file_name+","+prediction+"\n")
 
 
 root = tkinter.Tk()
@@ -93,11 +106,16 @@ btn_borwseModel.place(x=350, y=117.5)
 btn_predict = ttk.Button(root,text='Predict',command=runPredict)
 btn_predict.place(x=255, y=200)
 
+btn_predict = ttk.Button(root,text='Conclusion',command=print_conclusion)
+btn_predict.place(x=350, y=200)
+
 label3 = ttk.Label(root,text='Results')
 label3.place(x=20, y=230)
 
 lb_results = tkinter.Listbox(root,width=92)
 lb_results.place(x=20,y=250)
+
+
 
 
 root.mainloop()
